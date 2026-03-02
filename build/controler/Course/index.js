@@ -1,29 +1,44 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DeleteCourse = exports.UpdateCourse = exports.GetCourseById = exports.GetCourses = exports.CreateCourse = void 0;
+exports.DeleteCourse = exports.UpdateCourse = exports.GetCourseById = exports.GetCourses = void 0;
+exports.CreateCourse = CreateCourse;
 const prismacontro_1 = require("../prismacontro");
-const client_1 = require("@prisma/client");
-const CreateCourse = async (req, res) => {
+const library_1 = require("@prisma/client/runtime/library");
+async function CreateCourse(req, res) {
     try {
-        const { title, description, heading, duration } = (req.body ?? {});
-        if (!title || !description || !heading || !duration) {
-            return res.status(400).json({ error: "Missing required fields" });
+        const { title, heading, description, duration } = req.body;
+        if (!title?.trim()) {
+            return res.status(400).json({ message: "Title is required" });
+        }
+        if (!heading?.trim()) {
+            return res.status(400).json({ message: "Heading is required" });
+        }
+        if (!description?.trim()) {
+            return res.status(400).json({ message: "Description is required" });
+        }
+        if (!duration?.trim()) {
+            return res.status(400).json({ message: "Duration is required" });
         }
         const course = await prismacontro_1.prisma.course.create({
             data: {
                 title,
-                description,
                 heading,
+                description,
                 duration,
             },
         });
-        res.status(201).json({ message: "Course created successfully", course });
+        res.status(201).json(course);
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+        if (error instanceof library_1.PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+                return res.status(400).json({ message: 'Course title already exists' });
+            }
+        }
+        console.error("Create course error:", error);
+        res.status(500).json({ message: 'Internal server error' });
     }
-};
-exports.CreateCourse = CreateCourse;
+}
 const GetCourses = async (req, res) => {
     try {
         const courses = await prismacontro_1.prisma.course.findMany({
@@ -132,7 +147,7 @@ const DeleteCourse = async (req, res) => {
         res.status(200).json(course);
     }
     catch (error) {
-        if (error instanceof client_1.Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        if (error instanceof library_1.PrismaClientKnownRequestError && error.code === "P2025") {
             return res.status(404).json({ error: "Course not found" });
         }
         res.status(500).json({ error: error.message });

@@ -1,33 +1,45 @@
 import { Request, Response } from "express";
 import { prisma } from "../prismacontro";
-import { Prisma } from "@prisma/client";
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-export interface Course {
-    title: string;
-    description: string;
-    heading?: string;
-    duration?: string;
+export async function CreateCourse(req: Request, res: Response) {
+  try {
+    const { title, heading, description, duration } = req.body;
+
+    // Check required fields
+    if (!title?.trim()) {
+      return res.status(400).json({ message: "Title is required" });
+    }
+    if (!heading?.trim()) {
+      return res.status(400).json({ message: "Heading is required" });
+    }
+    if (!description?.trim()) {
+      return res.status(400).json({ message: "Description is required" });
+    }
+    if (!duration?.trim()) {
+      return res.status(400).json({ message: "Duration is required" });
+    }
+
+    const course = await prisma.course.create({
+      data: {
+        title,
+        heading,
+        description,
+        duration,
+      },
+    });
+    res.status(201).json(course);
+  } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError) {
+      // Unique constraint failed (if title must be unique)
+      if (error.code === 'P2002') {
+        return res.status(400).json({ message: 'Course title already exists' });
+      }
+    }
+    console.error("Create course error:", error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 }
-export const CreateCourse = async (req: Request, res: Response) => {
-    try {
-        const { title, description, heading, duration } = (req.body ?? {}) as Course;
-        if (!title || !description || !heading || !duration) {
-            return res.status(400).json({ error: "Missing required fields" });
-        }
-        const course = await prisma.course.create({
-            data: {
-                title,
-                description,
-                heading,
-                duration,
-            },
-        })  ;
-        res.status(201).json({ message: "Course created successfully", course });
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }   
-};
-
 export const GetCourses = async (req: Request, res: Response) => {
     try {
         const courses = await prisma.course.findMany({
@@ -134,7 +146,8 @@ export const DeleteCourse = async (req: Request, res: Response) => {
         });
         res.status(200).json(course);
     } catch (error: any) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        // Use the imported PrismaClientKnownRequestError directly
+        if (error instanceof PrismaClientKnownRequestError && error.code === "P2025") {
             return res.status(404).json({ error: "Course not found" });
         }
         res.status(500).json({ error: error.message });
