@@ -44,6 +44,6 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
   },
-    "include": ["src/**/*"],
+    "include": ["src/**/*", "api"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
 }
