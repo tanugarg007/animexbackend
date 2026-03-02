@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./build",          // where compiled JS goes
+    "rootDir": "./src",           // source folder
+    "target": "ES2020",           // JS version
+    "module": "NodeNext",         // module system
+    "moduleResolution": "NodeNext",
+    "declaration": false,         // no .d.ts files for release
+    "declarationMap": false,      // must be false when declaration is false
+    "sourceMap": false,           // no source maps in production
+    "removeComments": true,       // remove comments
+    "strict": true,               // keep type checks
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts"]
+}
