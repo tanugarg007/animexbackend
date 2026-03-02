@@ -139,4 +139,3 @@ const DeleteCourse = async (req, res) => {
     }
 };
 exports.DeleteCourse = DeleteCourse;
-//# sourceMappingURL=index.js.map

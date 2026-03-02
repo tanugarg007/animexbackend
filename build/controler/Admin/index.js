@@ -14,12 +14,10 @@ const LoginUser = async (req, res) => {
             return res.status(400).json({ message: "Email and password required" });
         }
         const normalizedEmail = email.toLowerCase().trim();
-        // Check total users to support first-login bootstrap
         const totalUsers = await prismacontro_1.prisma.user.count();
         const existingAdmin = await prismacontro_1.prisma.user.findUnique({
             where: { email: normalizedEmail },
         });
-        // First ever login: create initial admin with provided credentials
         if (totalUsers === 0 && !existingAdmin) {
             const hashedPassword = await bcrypt_1.default.hash(password, 10);
             const admin = await prismacontro_1.prisma.user.create({
@@ -49,7 +47,6 @@ const LoginUser = async (req, res) => {
                 },
             });
         }
-        // Normal login: user must exist
         if (!existingAdmin) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
@@ -115,4 +112,3 @@ const ForgotAdminPassword = async (req, res) => {
     }
 };
 exports.ForgotAdminPassword = ForgotAdminPassword;
-//# sourceMappingURL=index.js.map

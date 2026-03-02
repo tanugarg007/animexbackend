@@ -74,4 +74,3 @@ const UpdateProfile = async (req, res) => {
     }
 };
 exports.UpdateProfile = UpdateProfile;
-//# sourceMappingURL=index.js.map

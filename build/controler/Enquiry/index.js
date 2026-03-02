@@ -47,23 +47,19 @@ exports.GetEnquiries = GetEnquiries;
 const UpdateEnquiry = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        // ✅ id validation
         if (!id || isNaN(id)) {
             return res.status(400).json({ message: "Invalid enquiry id" });
         }
         const { name, email, phone, message, course } = req.body;
-        // ✅ required fields check
         if (!name || !email || !phone || !message || !course) {
             return res.status(400).json({ message: "All fields are required" });
         }
-        // ✅ check if enquiry exists
         const existingEnquiry = await prismacontro_1.prisma.enquiry.findUnique({
             where: { id },
         });
         if (!existingEnquiry) {
             return res.status(404).json({ message: "Enquiry not found" });
         }
-        // ✅ update enquiry
         const enquiry = await prismacontro_1.prisma.enquiry.update({
             where: { id },
             data: {
@@ -88,18 +84,15 @@ exports.UpdateEnquiry = UpdateEnquiry;
 const DeleteEnquiry = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        // ✅ id validation
         if (!id || isNaN(id)) {
             return res.status(400).json({ message: "Invalid enquiry id" });
         }
-        // ✅ check if enquiry exists
         const existingEnquiry = await prismacontro_1.prisma.enquiry.findUnique({
             where: { id },
         });
         if (!existingEnquiry) {
             return res.status(404).json({ message: "Enquiry not found" });
         }
-        // ✅ delete enquiry
         await prismacontro_1.prisma.enquiry.delete({
             where: { id },
         });
@@ -113,4 +106,3 @@ const DeleteEnquiry = async (req, res) => {
     }
 };
 exports.DeleteEnquiry = DeleteEnquiry;
-//# sourceMappingURL=index.js.map
