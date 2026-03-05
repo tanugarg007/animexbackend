@@ -9,24 +9,19 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const approuter_1 = require("./router/approuter");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const configuredOrigins = (process.env.CORS_ORIGINS || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
 app.use((0, cors_1.default)({
-    origin: (origin, callback) => {
+    origin: function (origin, callback) {
         if (!origin)
             return callback(null, true);
-        const isLocalhost = origin.includes("localhost");
-        const isVercel = origin.includes(".vercel.app");
-        const isConfigured = configuredOrigins.includes(origin);
-        if (isLocalhost || isVercel || isConfigured || configuredOrigins.length === 0) {
-            return callback(null, true);
+        if (origin.includes("vercel.app") ||
+            origin.includes("localhost")) {
+            callback(null, true);
         }
-        return callback(null, true);
+        else {
+            callback(new Error("Not allowed by CORS"));
+        }
     },
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
 }));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
