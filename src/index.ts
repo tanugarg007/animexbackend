@@ -6,16 +6,22 @@ import { router } from "./router/approuter";
 dotenv.config();
 
 const app = express();
-
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://dream-animex-project-4m4b.vercel.app"
-  ],
-  methods: ["GET", "POST", "PATCH", "DELETE"],
-  credentials: true
-}));
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
 
+    if (
+      origin.includes("vercel.app") ||
+      origin.includes("localhost")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
