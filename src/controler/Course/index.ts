@@ -4,18 +4,12 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export async function CreateCourse(req: Request, res: Response) {
   try {
-    const { title, heading, description, duration } = req.body;
+    const { title, duration } = req.body;
 
-    // Check required fields
     if (!title?.trim()) {
       return res.status(400).json({ message: "Title is required" });
     }
-    if (!heading?.trim()) {
-      return res.status(400).json({ message: "Heading is required" });
-    }
-    if (!description?.trim()) {
-      return res.status(400).json({ message: "Description is required" });
-    }
+
     if (!duration?.trim()) {
       return res.status(400).json({ message: "Duration is required" });
     }
@@ -23,42 +17,40 @@ export async function CreateCourse(req: Request, res: Response) {
     const course = await prisma.course.create({
       data: {
         title,
-        heading,
-        description,
         duration,
+        heading: "",        // optional empty
+        description: "",    // optional empty
       },
     });
+
     res.status(201).json(course);
   } catch (error) {
-    if (error instanceof PrismaClientKnownRequestError) {
-      // Unique constraint failed (if title must be unique)
-      if (error.code === 'P2002') {
-        return res.status(400).json({ message: 'Course title already exists' });
-      }
-    }
     console.error("Create course error:", error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: "Internal server error" });
   }
 }
 export const GetCourses = async (req: Request, res: Response) => {
-    try {
-        const courses = await prisma.course.findMany({
-            select: {
-                id: true,
-                title: true,
-                heading: true,
-                description: true,
-                duration: true,
-                createdAt: true,
-                updatedAt: true,
-            },
-        });
-        res.status(200).json(courses);
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-};
+  try {
+    const courses = await prisma.course.findMany({
+      orderBy: {
+        createdAt: "desc",   // 🔥 newest first
+      },
+      select: {
+        id: true,
+        title: true,
+        heading: true,
+        description: true,
+        duration: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
+    res.status(200).json(courses);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
 export const GetCourseById = async (req: Request, res: Response) => {
     try {
         const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
@@ -92,14 +84,12 @@ export const GetCourseById = async (req: Request, res: Response) => {
 
 export const UpdateCourse = async (req: Request, res: Response) => {
   try {
-    const { title, heading, duration, description } = req.body;
+    const { title, duration } = req.body;
 
     const updateData: any = {};
 
-    if (title?.trim()) updateData.title = title;
-    if (heading?.trim()) updateData.heading = heading;
-    if (duration?.trim()) updateData.duration = duration;
-    if (description !== undefined) updateData.description = description;
+    if (title?.trim()) updateData.title = title.trim();
+    if (duration?.trim()) updateData.duration = duration.trim();
 
     if (Object.keys(updateData).length === 0) {
       return res.status(400).json({
@@ -121,7 +111,6 @@ export const UpdateCourse = async (req: Request, res: Response) => {
     });
   }
 };
-
 export const DeleteCourse = async (req: Request, res: Response) => {
     try {
         const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;

@@ -36,22 +36,35 @@ export const UpdateProfile = async (req: Request, res: Response) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const { name, email, avatar } = req.body as {
+    const { name, email, removeAvatar } = req.body as {
       name?: string;
       email?: string;
-      avatar?: string;
+      removeAvatar?: string;
     };
 
-    const files = (req.files as Express.Multer.File[] | undefined) || [];
-    const fileFromSingle = req.file as Express.Multer.File | undefined;
-    const uploadedFile = fileFromSingle || files[0];
-    const uploadedAvatar = uploadedFile ? `/uploads/${uploadedFile.filename}` : undefined;
+    const uploadedFile = req.file as Express.Multer.File | undefined;
+    const uploadedAvatar = uploadedFile
+      ? `/uploads/${uploadedFile.filename}`
+      : undefined;
 
-    const data: { name?: string; email?: string; avatar?: string } = {};
+    const data: {
+      name?: string;
+      email?: string;
+      avatar?: string | null;
+    } = {};
+
     if (name) data.name = name;
     if (email) data.email = email;
-    const finalAvatar = uploadedAvatar ?? avatar;
-    if (finalAvatar) data.avatar = finalAvatar;
+
+    // ✅ If new avatar uploaded
+    if (uploadedAvatar) {
+      data.avatar = uploadedAvatar;
+    }
+
+    // ✅ If remove avatar requested
+    if (removeAvatar === "true") {
+      data.avatar = null;
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },

@@ -7,8 +7,10 @@ dotenv.config();
 
 const app = express();
 
+const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
+
 const corsOptions = {
-  origin: "https://dream-animex-project-4m4b.vercel.app",
+  origin: corsOrigin,
   methods: ["GET", "POST",  "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,

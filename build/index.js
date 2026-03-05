@@ -9,10 +9,12 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const approuter_1 = require("./router/approuter");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
 const corsOptions = {
-    origin: '*',
-    methods: '*',
-    allowedHeaders: 'Content-Type,Authorization',
+    origin: corsOrigin,
+    methods: ["GET", "POST", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
 };
 app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
