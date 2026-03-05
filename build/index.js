@@ -9,20 +9,31 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const approuter_1 = require("./router/approuter");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const corsOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
-const corsOptions = {
-    origin: corsOrigin,
-    methods: ["GET", "POST", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+app.use((0, cors_1.default)({
+    origin: (origin, callback) => {
+        if (!origin)
+            return callback(null, true);
+        const isLocalhost = origin.includes("localhost");
+        const isVercel = origin.includes(".vercel.app");
+        const isConfigured = configuredOrigins.includes(origin);
+        if (isLocalhost || isVercel || isConfigured || configuredOrigins.length === 0) {
+            return callback(null, true);
+        }
+        return callback(null, true);
+    },
     credentials: true,
-};
-app.use((0, cors_1.default)(corsOptions));
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+}));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-app.use('/users', approuter_1.router);
+app.use("/users", approuter_1.router);
 app.use("/uploads", express_1.default.static("uploads"));
-app.get('/', (req, res) => {
-    res.send('Backend is running!');
+app.get("/", (req, res) => {
+    res.send("Backend is running!");
 });
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

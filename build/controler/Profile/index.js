@@ -37,19 +37,22 @@ const UpdateProfile = async (req, res) => {
         const userId = req.user?.id;
         if (!userId)
             return res.status(401).json({ message: "Unauthorized" });
-        const { name, email, avatar } = req.body;
-        const files = req.files || [];
-        const fileFromSingle = req.file;
-        const uploadedFile = fileFromSingle || files[0];
-        const uploadedAvatar = uploadedFile ? `/uploads/${uploadedFile.filename}` : undefined;
+        const { name, email, removeAvatar } = req.body;
+        const uploadedFile = req.file;
+        const uploadedAvatar = uploadedFile
+            ? `/uploads/${uploadedFile.filename}`
+            : undefined;
         const data = {};
         if (name)
             data.name = name;
         if (email)
             data.email = email;
-        const finalAvatar = uploadedAvatar ?? avatar;
-        if (finalAvatar)
-            data.avatar = finalAvatar;
+        if (uploadedAvatar) {
+            data.avatar = uploadedAvatar;
+        }
+        if (removeAvatar === "true") {
+            data.avatar = null;
+        }
         const updatedUser = await prismacontro_1.prisma.user.update({
             where: { id: userId },
             data,

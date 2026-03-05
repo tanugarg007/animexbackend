@@ -6,15 +6,9 @@ const prismacontro_1 = require("../prismacontro");
 const library_1 = require("@prisma/client/runtime/library");
 async function CreateCourse(req, res) {
     try {
-        const { title, heading, description, duration } = req.body;
+        const { title, duration } = req.body;
         if (!title?.trim()) {
             return res.status(400).json({ message: "Title is required" });
-        }
-        if (!heading?.trim()) {
-            return res.status(400).json({ message: "Heading is required" });
-        }
-        if (!description?.trim()) {
-            return res.status(400).json({ message: "Description is required" });
         }
         if (!duration?.trim()) {
             return res.status(400).json({ message: "Duration is required" });
@@ -22,26 +16,24 @@ async function CreateCourse(req, res) {
         const course = await prismacontro_1.prisma.course.create({
             data: {
                 title,
-                heading,
-                description,
                 duration,
+                heading: "",
+                description: "",
             },
         });
         res.status(201).json(course);
     }
     catch (error) {
-        if (error instanceof library_1.PrismaClientKnownRequestError) {
-            if (error.code === 'P2002') {
-                return res.status(400).json({ message: 'Course title already exists' });
-            }
-        }
         console.error("Create course error:", error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: "Internal server error" });
     }
 }
 const GetCourses = async (req, res) => {
     try {
         const courses = await prismacontro_1.prisma.course.findMany({
+            orderBy: {
+                createdAt: "desc",
+            },
             select: {
                 id: true,
                 title: true,
@@ -93,16 +85,12 @@ const GetCourseById = async (req, res) => {
 exports.GetCourseById = GetCourseById;
 const UpdateCourse = async (req, res) => {
     try {
-        const { title, heading, duration, description } = req.body;
+        const { title, duration } = req.body;
         const updateData = {};
         if (title?.trim())
-            updateData.title = title;
-        if (heading?.trim())
-            updateData.heading = heading;
+            updateData.title = title.trim();
         if (duration?.trim())
-            updateData.duration = duration;
-        if (description !== undefined)
-            updateData.description = description;
+            updateData.duration = duration.trim();
         if (Object.keys(updateData).length === 0) {
             return res.status(400).json({
                 error: "No valid fields provided for update",
