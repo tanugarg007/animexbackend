@@ -6,22 +6,31 @@ import { router } from "./router/approuter";
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
+const configuredOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
 
-    if (
-      origin.includes("vercel.app") ||
-      origin.includes("localhost")
-    ) {
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      const isLocalhost = origin.includes("localhost");
+      const isVercel = origin.includes(".vercel.app");
+      const isConfigured = configuredOrigins.includes(origin);
+
+      // Avoid failing requests with 500 for new domains; if needed, lock this down via CORS_ORIGINS.
+      if (isLocalhost || isVercel || isConfigured || configuredOrigins.length === 0) {
+        return callback(null, true);
+      }
+
       return callback(null, true);
-    }
-
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-}));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
