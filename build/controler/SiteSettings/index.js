@@ -41,4 +41,3 @@ const UpdateSiteSettings = async (req, res) => {
     }
 };
 exports.UpdateSiteSettings = UpdateSiteSettings;
-//# sourceMappingURL=index.js.map

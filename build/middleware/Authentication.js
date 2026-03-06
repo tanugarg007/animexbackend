@@ -31,4 +31,3 @@ const Authentication = (req, res, next) => {
     });
 };
 exports.Authentication = Authentication;
-//# sourceMappingURL=Authentication.js.map
