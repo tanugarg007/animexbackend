@@ -7,6 +7,9 @@ exports.ForgotAdminPassword = exports.LoginUser = void 0;
 const prismacontro_1 = require("../prismacontro");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+// ------------------------------
+// Login / First Admin Creation
+// ------------------------------
 const LoginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -15,6 +18,9 @@ const LoginUser = async (req, res) => {
             return res.status(400).json({ message: "Email and password required" });
         }
         const normalizedEmail = email.toLowerCase().trim();
+        // ------------------------------
+        // Check total users
+        // ------------------------------
         let totalUsers;
         try {
             totalUsers = await prismacontro_1.prisma.user.count();
@@ -24,6 +30,9 @@ const LoginUser = async (req, res) => {
             console.error("Prisma count failed:", err);
             return res.status(500).json({ message: "Database error" });
         }
+        // ------------------------------
+        // Check if user exists
+        // ------------------------------
         let existingUser;
         try {
             existingUser = await prismacontro_1.prisma.user.findUnique({
@@ -35,6 +44,9 @@ const LoginUser = async (req, res) => {
             console.error("Prisma findUnique failed:", err);
             return res.status(500).json({ message: "Database error" });
         }
+        // ------------------------------
+        // First ever login: create admin
+        // ------------------------------
         if (totalUsers === 0 && !existingUser) {
             let hashedPassword;
             try {
@@ -81,6 +93,9 @@ const LoginUser = async (req, res) => {
                 },
             });
         }
+        // ------------------------------
+        // Normal login
+        // ------------------------------
         if (!existingUser) {
             return res.status(401).json({ message: "Invalid email or password" });
         }
@@ -123,6 +138,9 @@ const LoginUser = async (req, res) => {
     }
 };
 exports.LoginUser = LoginUser;
+// ------------------------------
+// Forgot / Reset Admin Password
+// ------------------------------
 const ForgotAdminPassword = async (req, res) => {
     try {
         const { email, newPassword } = req.body;
@@ -177,3 +195,4 @@ const ForgotAdminPassword = async (req, res) => {
     }
 };
 exports.ForgotAdminPassword = ForgotAdminPassword;
+//# sourceMappingURL=index.js.map

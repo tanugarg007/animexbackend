@@ -17,8 +17,8 @@ async function CreateCourse(req, res) {
             data: {
                 title,
                 duration,
-                heading: "",
-                description: "",
+                heading: "", // optional empty
+                description: "", // optional empty
             },
         });
         res.status(201).json(course);
@@ -32,7 +32,7 @@ const GetCourses = async (req, res) => {
     try {
         const courses = await prismacontro_1.prisma.course.findMany({
             orderBy: {
-                createdAt: "desc",
+                createdAt: "desc", // 🔥 newest first
             },
             select: {
                 id: true,
@@ -135,6 +135,7 @@ const DeleteCourse = async (req, res) => {
         res.status(200).json(course);
     }
     catch (error) {
+        // Use the imported PrismaClientKnownRequestError directly
         if (error instanceof library_1.PrismaClientKnownRequestError && error.code === "P2025") {
             return res.status(404).json({ error: "Course not found" });
         }
@@ -142,3 +143,4 @@ const DeleteCourse = async (req, res) => {
     }
 };
 exports.DeleteCourse = DeleteCourse;
+//# sourceMappingURL=index.js.map
