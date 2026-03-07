@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const createMailTransport = () => {
+export const createMailTransport = () => {
   const gmailUser = process.env.GMAIL_USER;
   const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
 
