@@ -1,4 +1,12 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+try {
+  // Render environments can fail IPv6 SMTP routes; prefer IPv4 first for DNS lookups.
+  dns.setDefaultResultOrder("ipv4first");
+} catch (_error) {
+  // Ignore if runtime does not support changing DNS result order.
+}
 
 let transporter: nodemailer.Transporter | null = null;
 let mailInitLogged = false;

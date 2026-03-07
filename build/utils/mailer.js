@@ -5,6 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendResetOtpEmail = exports.createMailTransport = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const dns_1 = __importDefault(require("dns"));
+try {
+    dns_1.default.setDefaultResultOrder("ipv4first");
+}
+catch (_error) {
+}
 let transporter = null;
 let mailInitLogged = false;
 const createMailTransport = () => {
