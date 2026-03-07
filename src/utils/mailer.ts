@@ -16,16 +16,31 @@ const createMailTransport = () => {
     },
   });
 };
-
+const transporter = createMailTransport();
+if (transporter) {
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ SMTP connection error:', error);
+    } else {
+      console.log('✅ SMTP is ready to send emails');
+    }
+  });
+} else {
+  console.warn('⚠️ Mail service not configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)');
+}
 export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
-  const transporter = createMailTransport();
-  const gmailUser = process.env.GMAIL_USER;
-  const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
+  // const transporter = createMailTransport();
+  // const gmailUser = process.env.GMAIL_USER;
+  // const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
 
-  if (!transporter || !gmailUser || !mailFrom) {
+  if (!transporter ) {
     throw new Error("Mail service is not configured.");
   }
-
+ const gmailUser = process.env.GMAIL_USER;
+  const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
+   if (!mailFrom) {
+    throw new Error("Mail sender address is not configured.");
+  }
   await transporter.sendMail({
     from: mailFrom,
     to: toEmail,
