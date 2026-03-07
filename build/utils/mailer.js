@@ -3,8 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendResetOtpEmail = void 0;
+exports.sendResetOtpEmail = exports.createMailTransport = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+let transporter = null;
+let mailInitLogged = false;
 const createMailTransport = () => {
     const gmailUser = process.env.GMAIL_USER;
     const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
@@ -12,21 +14,58 @@ const createMailTransport = () => {
         return null;
     }
     return nodemailer_1.default.createTransport({
-        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        requireTLS: true,
         auth: {
             user: gmailUser,
             pass: gmailAppPassword,
         },
+        connectionTimeout: 10000,
+        tls: {
+            rejectUnauthorized: false,
+        },
     });
 };
+exports.createMailTransport = createMailTransport;
+const getTransporter = () => {
+    if (transporter) {
+        return transporter;
+    }
+    const nextTransporter = (0, exports.createMailTransport)();
+    if (!nextTransporter) {
+        if (!mailInitLogged) {
+            console.warn("Mail service not configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)");
+            mailInitLogged = true;
+        }
+        return null;
+    }
+    if (!mailInitLogged) {
+        nextTransporter.verify((error) => {
+            if (error) {
+                console.error("SMTP connection error:", error);
+            }
+            else {
+                console.log("SMTP is ready to send emails");
+            }
+        });
+        mailInitLogged = true;
+    }
+    transporter = nextTransporter;
+    return transporter;
+};
 const sendResetOtpEmail = async (toEmail, otp) => {
-    const transporter = createMailTransport();
-    const gmailUser = process.env.GMAIL_USER;
-    const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
-    if (!transporter || !gmailUser || !mailFrom) {
+    const mailTransporter = getTransporter();
+    if (!mailTransporter) {
         throw new Error("Mail service is not configured.");
     }
-    await transporter.sendMail({
+    const gmailUser = process.env.GMAIL_USER;
+    const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
+    if (!mailFrom) {
+        throw new Error("Mail sender address is not configured.");
+    }
+    await mailTransporter.sendMail({
         from: mailFrom,
         to: toEmail,
         subject: "Dream Animex Password Reset OTP",

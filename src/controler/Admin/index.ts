@@ -367,8 +367,8 @@ export const ForgotAdminPassword = async (
       } catch (mailError) {
         resetOtpSessions.delete(normalizedEmail);
         console.error("Failed to send reset OTP email:", mailError);
-        return res.status(500).json({
-          message: "Unable to send verification code right now. Please try again later.",
+        return res.status(503).json({
+          message: "Password reset email service is unavailable. Please try again later.",
         });
       }
 
