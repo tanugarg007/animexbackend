@@ -1,5 +1,6 @@
 import {Request,Response} from 'express';
 import { prisma } from "../prismacontro";
+const NAME_REGEX = /^[A-Za-z ]+$/;
 
 interface Enquiry{
    name:string,
@@ -15,9 +16,12 @@ export const Enquiry = async (req: Request, res:Response):Promise<any> => {
        if(!name || !email || !phone || !message || !course){
          return res.status(400).json({message:"all fields are required"})
        }
+       if (!NAME_REGEX.test(name.trim())) {
+         return res.status(400).json({ message: "Name can contain only letters and spaces" });
+       }
        const enquiry = await prisma.enquiry.create({
          data:{
-            name,       
+            name: name.trim(),
             email,
             phone,
             message,
@@ -66,6 +70,9 @@ export const UpdateEnquiry = async (req: Request, res: Response): Promise<any> =
     if (!name || !email || !phone || !message || !course) {
       return res.status(400).json({ message: "All fields are required" });
     }
+    if (!NAME_REGEX.test(name.trim())) {
+      return res.status(400).json({ message: "Name can contain only letters and spaces" });
+    }
 
     // ✅ check if enquiry exists
     const existingEnquiry = await prisma.enquiry.findUnique({
@@ -80,7 +87,7 @@ export const UpdateEnquiry = async (req: Request, res: Response): Promise<any> =
     const enquiry = await prisma.enquiry.update({
       where: { id },
       data: {
-        name,
+        name: name.trim(),
         email,
         phone,
         message,

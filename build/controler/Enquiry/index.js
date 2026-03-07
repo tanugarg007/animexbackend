@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeleteEnquiry = exports.UpdateEnquiry = exports.GetEnquiries = exports.Enquiry = void 0;
 const prismacontro_1 = require("../prismacontro");
+const NAME_REGEX = /^[A-Za-z ]+$/;
 const Enquiry = async (req, res) => {
     console.log("Received enquiry data:", req.body);
     try {
@@ -9,9 +10,12 @@ const Enquiry = async (req, res) => {
         if (!name || !email || !phone || !message || !course) {
             return res.status(400).json({ message: "all fields are required" });
         }
+        if (!NAME_REGEX.test(name.trim())) {
+            return res.status(400).json({ message: "Name can contain only letters and spaces" });
+        }
         const enquiry = await prismacontro_1.prisma.enquiry.create({
             data: {
-                name,
+                name: name.trim(),
                 email,
                 phone,
                 message,
@@ -54,6 +58,9 @@ const UpdateEnquiry = async (req, res) => {
         if (!name || !email || !phone || !message || !course) {
             return res.status(400).json({ message: "All fields are required" });
         }
+        if (!NAME_REGEX.test(name.trim())) {
+            return res.status(400).json({ message: "Name can contain only letters and spaces" });
+        }
         const existingEnquiry = await prismacontro_1.prisma.enquiry.findUnique({
             where: { id },
         });
@@ -63,7 +70,7 @@ const UpdateEnquiry = async (req, res) => {
         const enquiry = await prismacontro_1.prisma.enquiry.update({
             where: { id },
             data: {
-                name,
+                name: name.trim(),
                 email,
                 phone,
                 message,
