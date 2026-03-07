@@ -17,7 +17,7 @@ type ResetOtpSession = {
 
 const resetOtpSessions = new Map<string, ResetOtpSession>();
 const OTP_EXPIRY_MS = 10 * 60 * 1000;
-const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+const OTP_RESEND_COOLDOWN_MS = 30 * 1000;
 const MAX_VERIFY_ATTEMPTS = 5;
 const MAX_REQUESTS_IN_WINDOW = 5;
 const REQUEST_WINDOW_MS = 30 * 60 * 1000;
