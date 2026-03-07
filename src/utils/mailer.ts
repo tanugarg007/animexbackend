@@ -9,13 +9,23 @@ const createMailTransport = () => {
   }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: 'smtp.gmail.com',
+    port: 587,                 // Use 587 for STARTTLS
+    secure: false,             // false for port 587 (true for 465)
+    requireTLS: true,          // forces STARTTLS
     auth: {
       user: gmailUser,
       pass: gmailAppPassword,
     },
+    // Optional: increase timeout and handle TLS if needed
+    connectionTimeout: 10000,   // 10 seconds
+    tls: {
+      rejectUnauthorized: false, // sometimes needed on some hosts; remove if not necessary
+    },
   });
 };
+
+// Create and verify transporter once
 const transporter = createMailTransport();
 if (transporter) {
   transporter.verify((error, success) => {
@@ -28,19 +38,18 @@ if (transporter) {
 } else {
   console.warn('⚠️ Mail service not configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)');
 }
-export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
-  // const transporter = createMailTransport();
-  // const gmailUser = process.env.GMAIL_USER;
-  // const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
 
-  if (!transporter ) {
+export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
+  if (!transporter) {
     throw new Error("Mail service is not configured.");
   }
- const gmailUser = process.env.GMAIL_USER;
+
+  const gmailUser = process.env.GMAIL_USER;
   const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
-   if (!mailFrom) {
+  if (!mailFrom) {
     throw new Error("Mail sender address is not configured.");
   }
+
   await transporter.sendMail({
     from: mailFrom,
     to: toEmail,
