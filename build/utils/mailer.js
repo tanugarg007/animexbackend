@@ -20,10 +20,14 @@ const getMailCredentials = () => {
     const pass = rawPass.replace(/\s+/g, "");
     return { user, pass };
 };
+const getMailFrom = () => {
+    const { user } = getMailCredentials();
+    return process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
+};
 const createMailTransport = () => {
     const { user, pass } = getMailCredentials();
     const host = process.env.SMTP_HOST || "smtp.gmail.com";
-    const port = Number(process.env.SMTP_PORT || 587);
+    const port = Number(process.env.SMTP_PORT || 465);
     const secure = process.env.SMTP_SECURE === "true" || port === 465;
     if (!user || !pass) {
         return null;
@@ -32,12 +36,14 @@ const createMailTransport = () => {
         host,
         port,
         secure,
-        requireTLS: true,
+        requireTLS: !secure,
         auth: {
             user,
             pass,
         },
         connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
         tls: {
             rejectUnauthorized: false,
         },
@@ -71,16 +77,11 @@ const getTransporter = () => {
     return transporter;
 };
 const sendResetOtpEmail = async (toEmail, otp) => {
-    const mailTransporter = getTransporter();
-    if (!mailTransporter) {
-        throw new Error("Mail service is not configured.");
-    }
-    const { user } = getMailCredentials();
-    const mailFrom = process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
+    const mailFrom = getMailFrom();
     if (!mailFrom) {
         throw new Error("Mail sender address is not configured.");
     }
-    await mailTransporter.sendMail({
+    const message = {
         from: mailFrom,
         to: toEmail,
         subject: "Dream Animex Password Reset OTP",
@@ -94,6 +95,11 @@ const sendResetOtpEmail = async (toEmail, otp) => {
         <p style="margin:0;color:#6b7280;">If you did not request this, please ignore this email.</p>
       </div>
     `,
-    });
+    };
+    const mailTransporter = getTransporter();
+    if (!mailTransporter) {
+        throw new Error("Mail service is not configured.");
+    }
+    await mailTransporter.sendMail(message);
 };
 exports.sendResetOtpEmail = sendResetOtpEmail;
