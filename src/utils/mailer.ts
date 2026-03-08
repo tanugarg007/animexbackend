@@ -34,12 +34,11 @@ export const createMailTransport = () => {
 
 return nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // important
+  port: 465,
+  secure: true, // important
   family: 4,
   auth: {
-    user: gmailUser,
-    pass: gmailAppPassword,
+   user: gmailUser, pass: gmailAppPassword
   },
    connectionTimeout: 30000,
   greetingTimeout: 30000,
