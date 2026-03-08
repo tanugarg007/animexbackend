@@ -41,6 +41,9 @@ export const createMailTransport = () => {
     user: gmailUser,
     pass: gmailAppPassword,
   },
+  tls: {
+    rejectUnauthorized: false, // Allow self-signed certificates (if any)
+  },
 } as nodemailer.TransportOptions);
 };
 
