@@ -271,7 +271,8 @@ const ForgotAdminPassword = async (req, res) => {
             }
             catch (mailError) {
                 const allowOtpFallback = process.env.ALLOW_RESET_OTP_IN_RESPONSE === "true";
-                console.error("Failed to send reset OTP email:", mailError);
+                const mailErr = mailError;
+                console.error("Failed to send reset OTP email:", mailErr);
                 if (allowOtpFallback) {
                     return res.status(200).json({
                         message: "Email service is unavailable. Use temporary OTP shown below to continue reset.",
@@ -281,8 +282,31 @@ const ForgotAdminPassword = async (req, res) => {
                     });
                 }
                 resetOtpSessions.delete(normalizedEmail);
+                const debugDetails = process.env.MAIL_DEBUG_ERRORS === "true";
+                const errCode = (mailErr?.code || "").toUpperCase();
+                const errMessage = (mailErr?.message || "").toLowerCase();
+                let message = "Password reset email service is unavailable. Please try again later or contact support.";
+                if (errMessage.includes("not configured")) {
+                    message = "Email service is not configured on server. Please contact support.";
+                }
+                else if (errCode === "EAUTH" ||
+                    errMessage.includes("invalid login") ||
+                    errMessage.includes("bad credentials")) {
+                    message = "Email service authentication failed. Please contact support.";
+                }
+                else if (errCode === "ETIMEDOUT" ||
+                    errCode === "ECONNECTION" ||
+                    errCode === "ESOCKET") {
+                    message = "Email server is unreachable right now. Please try again shortly.";
+                }
                 return res.status(503).json({
-                    message: "Password reset email service is unavailable. Please try again later or contact support.",
+                    message,
+                    ...(debugDetails
+                        ? {
+                            errorCode: mailErr?.code || null,
+                            errorDetails: mailErr?.response || mailErr?.message || null,
+                        }
+                        : {}),
                 });
             }
             const payload = {
