@@ -365,10 +365,23 @@ export const ForgotAdminPassword = async (
       try {
         await sendResetOtpEmail(normalizedEmail, plainOtp);
       } catch (mailError) {
-        resetOtpSessions.delete(normalizedEmail);
+        const allowOtpFallback = process.env.ALLOW_RESET_OTP_IN_RESPONSE === "true";
         console.error("Failed to send reset OTP email:", mailError);
+
+        if (allowOtpFallback) {
+          return res.status(200).json({
+            message:
+              "Email service is unavailable. Use temporary OTP shown below to continue reset.",
+            expiresInSeconds: Math.ceil(OTP_EXPIRY_MS / 1000),
+            resendAfterSeconds: Math.ceil(OTP_RESEND_COOLDOWN_MS / 1000),
+            debugOtp: plainOtp,
+          });
+        }
+
+        resetOtpSessions.delete(normalizedEmail);
         return res.status(503).json({
-          message: "Password reset email service is unavailable. Please try again later.",
+          message:
+            "Password reset email service is unavailable. Please try again later or contact support.",
         });
       }
 

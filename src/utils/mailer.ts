@@ -11,22 +11,33 @@ try {
 let transporter: nodemailer.Transporter | null = null;
 let mailInitLogged = false;
 
-export const createMailTransport = () => {
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+const getMailCredentials = () => {
+  const rawUser = process.env.SMTP_USER || process.env.GMAIL_USER || "";
+  const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
+  const user = rawUser.trim();
+  // Gmail app passwords are often copied with spaces every 4 chars.
+  const pass = rawPass.replace(/\s+/g, "");
+  return { user, pass };
+};
 
-  if (!gmailUser || !gmailAppPassword) {
+export const createMailTransport = () => {
+  const { user, pass } = getMailCredentials();
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT || 587);
+  const secure = process.env.SMTP_SECURE === "true" || port === 465;
+
+  if (!user || !pass) {
     return null;
   }
 
   return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
+    host,
+    port,
+    secure,
     requireTLS: true,
     auth: {
-      user: gmailUser,
-      pass: gmailAppPassword,
+      user,
+      pass,
     },
     connectionTimeout: 10000,
     tls: {
@@ -43,7 +54,9 @@ const getTransporter = () => {
   const nextTransporter = createMailTransport();
   if (!nextTransporter) {
     if (!mailInitLogged) {
-      console.warn("Mail service not configured (missing GMAIL_USER or GMAIL_APP_PASSWORD)");
+      console.warn(
+        "Mail service not configured (missing SMTP_USER/SMTP_PASS or GMAIL_USER/GMAIL_APP_PASSWORD)"
+      );
       mailInitLogged = true;
     }
     return null;
@@ -71,8 +84,8 @@ export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
     throw new Error("Mail service is not configured.");
   }
 
-  const gmailUser = process.env.GMAIL_USER;
-  const mailFrom = process.env.MAIL_FROM || (gmailUser ? `Dream Animex <${gmailUser}>` : "");
+  const { user } = getMailCredentials();
+  const mailFrom = process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
   if (!mailFrom) {
     throw new Error("Mail sender address is not configured.");
   }
