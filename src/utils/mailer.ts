@@ -41,6 +41,9 @@ return nodemailer.createTransport({
     user: gmailUser,
     pass: gmailAppPassword,
   },
+   connectionTimeout: 30000,
+  greetingTimeout: 30000,
+  socketTimeout: 30000,
   tls: {
     rejectUnauthorized: false,
   },
