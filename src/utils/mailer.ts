@@ -63,15 +63,14 @@ const isConnectionError = (error: unknown) => {
   return code === "ETIMEDOUT" || code === "ECONNECTION" || code === "ESOCKET";
 };
 
-const buildFallbackConfig = (config: MailTransportConfig): MailTransportConfig | null => {
-  if (config.host.toLowerCase() !== "smtp.gmail.com") return null;
-  if (config.port === 465) {
-    return { ...config, port: 587, secure: false };
-  }
-  if (config.port === 587) {
-    return { ...config, port: 465, secure: true };
-  }
-  return null;
+const buildFallbackConfigs = (config: MailTransportConfig): MailTransportConfig[] => {
+  const candidates: Array<{ port: number; secure: boolean }> = [];
+  if (config.port === 587) candidates.push({ port: 465, secure: true }, { port: 2525, secure: false });
+  else if (config.port === 465) candidates.push({ port: 587, secure: false }, { port: 2525, secure: false });
+  else if (config.port === 2525) candidates.push({ port: 587, secure: false }, { port: 465, secure: true });
+  else candidates.push({ port: 587, secure: false }, { port: 465, secure: true }, { port: 2525, secure: false });
+
+  return candidates.map((c) => ({ ...config, port: c.port, secure: c.secure }));
 };
 
 const getMailFrom = () => {
@@ -106,17 +105,23 @@ export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
     `,
   };
 
-  const primaryTransporter = createTransporter(config);
-  try {
-    await primaryTransporter.sendMail(message);
-    return;
-  } catch (primaryError) {
-    const fallbackConfig = buildFallbackConfig(config);
-    if (!fallbackConfig || !isConnectionError(primaryError)) {
-      throw primaryError;
-    }
+  const transportConfigs = [config, ...buildFallbackConfigs(config)];
+  let lastError: unknown = null;
 
-    const fallbackTransporter = createTransporter(fallbackConfig);
-    await fallbackTransporter.sendMail(message);
+  for (let i = 0; i < transportConfigs.length; i += 1) {
+    const t = transportConfigs[i];
+    if (!t) continue;
+    try {
+      const transporter = createTransporter(t);
+      await transporter.sendMail(message);
+      return;
+    } catch (err) {
+      lastError = err;
+      if (!isConnectionError(err) || i === transportConfigs.length - 1) {
+        throw err;
+      }
+    }
   }
+
+  if (lastError) throw lastError;
 };
