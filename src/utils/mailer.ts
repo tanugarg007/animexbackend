@@ -1,86 +1,90 @@
 import nodemailer from "nodemailer";
 import dns from "dns";
-dns.setDefaultResultOrder("ipv4first");
+
 try {
-  // Render environments can fail IPv6 SMTP routes; prefer IPv4 first for DNS lookups.
+  // Render can prefer IPv6 routes that fail for some SMTP providers.
   dns.setDefaultResultOrder("ipv4first");
 } catch (_error) {
-  // Ignore if runtime does not support changing DNS result order.
+  // Ignore for older runtimes.
 }
 
-let transporter: nodemailer.Transporter | null = null;
-let mailInitLogged = false;
+type MailTransportConfig = {
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  pass: string;
+};
 
 const getMailCredentials = () => {
   const rawUser = process.env.SMTP_USER || process.env.GMAIL_USER || "";
   const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
   const user = rawUser.trim();
-  // Gmail app passwords are often copied with spaces every 4 chars.
+  // Gmail app passwords are frequently copied with spaces.
   const pass = rawPass.replace(/\s+/g, "");
   return { user, pass };
+};
+
+const getPrimaryTransportConfig = (): MailTransportConfig | null => {
+  const { user, pass } = getMailCredentials();
+  if (!user || !pass) return null;
+
+  const host = (process.env.SMTP_HOST || "smtp.gmail.com").trim();
+  const port = Number(process.env.SMTP_PORT || 465);
+  const secure = process.env.SMTP_SECURE
+    ? process.env.SMTP_SECURE === "true"
+    : port === 465;
+
+  return { host, port, secure, user, pass };
+};
+
+const createTransporter = (config: MailTransportConfig) =>
+  nodemailer.createTransport({
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
+    requireTLS: !config.secure,
+    family: 4,
+    auth: {
+      user: config.user,
+      pass: config.pass,
+    },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+    tls: {
+      rejectUnauthorized: false,
+    },
+  } as nodemailer.TransportOptions);
+
+const isConnectionError = (error: unknown) => {
+  const err = error as { code?: string };
+  const code = (err?.code || "").toUpperCase();
+  return code === "ETIMEDOUT" || code === "ECONNECTION" || code === "ESOCKET";
+};
+
+const buildFallbackConfig = (config: MailTransportConfig): MailTransportConfig | null => {
+  if (config.host.toLowerCase() !== "smtp.gmail.com") return null;
+  if (config.port === 465) {
+    return { ...config, port: 587, secure: false };
+  }
+  if (config.port === 587) {
+    return { ...config, port: 465, secure: true };
+  }
+  return null;
 };
 
 const getMailFrom = () => {
   const { user } = getMailCredentials();
   return process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
 };
-export const createMailTransport = () => {
-  const gmailUser = process.env.GMAIL_USER;
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
-
-  if (!gmailUser || !gmailAppPassword) {
-    return null;
-  }
-
-return nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // important
-  family: 4,
-  auth: {
-   user: gmailUser, pass: gmailAppPassword
-  },
-   connectionTimeout: 30000,
-  greetingTimeout: 30000,
-  socketTimeout: 30000,
-  tls: {
-    rejectUnauthorized: false,
-  },
-} as nodemailer.TransportOptions);
-};
-
-const getTransporter = () => {
-  if (transporter) {
-    return transporter;
-  }
-
-  const nextTransporter = createMailTransport();
-  if (!nextTransporter) {
-    if (!mailInitLogged) {
-      console.warn(
-        "Mail service not configured (missing SMTP_USER/SMTP_PASS or GMAIL_USER/GMAIL_APP_PASSWORD)"
-      );
-      mailInitLogged = true;
-    }
-    return null;
-  }
-
-  if (!mailInitLogged) {
-    nextTransporter.verify((error) => {
-      if (error) {
-        console.error("SMTP connection error:", error);
-      } else {
-        console.log("SMTP is ready to send emails");
-      }
-    });
-    mailInitLogged = true;
-  }
-
-  transporter = nextTransporter;
-  return transporter;
-};
 
 export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
+  const config = getPrimaryTransportConfig();
+  if (!config) {
+    throw new Error("Mail service is not configured.");
+  }
+
   const mailFrom = getMailFrom();
   if (!mailFrom) {
     throw new Error("Mail sender address is not configured.");
@@ -102,9 +106,17 @@ export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
     `,
   };
 
-  const mailTransporter = getTransporter();
-  if (!mailTransporter) {
-    throw new Error("Mail service is not configured.");
+  const primaryTransporter = createTransporter(config);
+  try {
+    await primaryTransporter.sendMail(message);
+    return;
+  } catch (primaryError) {
+    const fallbackConfig = buildFallbackConfig(config);
+    if (!fallbackConfig || !isConnectionError(primaryError)) {
+      throw primaryError;
+    }
+
+    const fallbackTransporter = createTransporter(fallbackConfig);
+    await fallbackTransporter.sendMail(message);
   }
-  await mailTransporter.sendMail(message);
 };
