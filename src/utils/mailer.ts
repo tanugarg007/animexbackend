@@ -32,15 +32,16 @@ export const createMailTransport = () => {
     return null;
   }
 
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: {
-      user: gmailUser,
-      pass: gmailAppPassword,
-    },
-  } as nodemailer.TransportOptions);
+ return nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  family: 4, // force IPv4
+  auth: {
+    user: gmailUser,
+    pass: gmailAppPassword,
+  },
+} as nodemailer.TransportOptions);
 };
 
 const getTransporter = () => {
