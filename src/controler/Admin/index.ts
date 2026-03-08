@@ -399,7 +399,9 @@ export const ForgotAdminPassword = async (
           errCode === "ECONNECTION" ||
           errCode === "ESOCKET"
         ) {
-          message = "Email server is unreachable right now. Please try again shortly.";
+          const smtpHost = process.env.SMTP_HOST || "smtp.gmail.com";
+          const smtpPort = process.env.SMTP_PORT || "465";
+          message = `Email server (${smtpHost}:${smtpPort}) is unreachable right now. Please try again shortly.`;
         }
 
         return res.status(503).json({
