@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import dns from "dns";
-
+dns.setDefaultResultOrder("ipv4first");
 try {
   // Render environments can fail IPv6 SMTP routes; prefer IPv4 first for DNS lookups.
   dns.setDefaultResultOrder("ipv4first");
@@ -32,17 +32,17 @@ export const createMailTransport = () => {
     return null;
   }
 
- return nodemailer.createTransport({
+return nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  family: 4, // force IPv4
+  port: 587,
+  secure: false, // important
+  family: 4,
   auth: {
     user: gmailUser,
     pass: gmailAppPassword,
   },
   tls: {
-    rejectUnauthorized: false, // Allow self-signed certificates (if any)
+    rejectUnauthorized: false,
   },
 } as nodemailer.TransportOptions);
 };
