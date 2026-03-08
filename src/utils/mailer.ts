@@ -24,7 +24,6 @@ const getMailFrom = () => {
   const { user } = getMailCredentials();
   return process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
 };
-
 export const createMailTransport = () => {
   const gmailUser = process.env.GMAIL_USER;
   const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
@@ -34,12 +33,14 @@ export const createMailTransport = () => {
   }
 
   return nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: gmailUser,
       pass: gmailAppPassword,
     },
-  });
+  } as nodemailer.TransportOptions);
 };
 
 const getTransporter = () => {
