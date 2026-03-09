@@ -16,17 +16,6 @@ type MailTransportConfig = {
   pass: string;
 };
 
-const toPositiveInt = (value: string | undefined, fallback: number) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
-};
-
-const MAIL_TIMEOUT_MS = toPositiveInt(process.env.MAIL_TIMEOUT_MS, 8000);
-const MAIL_MAX_FALLBACK_ATTEMPTS = Math.min(
-  3,
-  Math.max(1, toPositiveInt(process.env.MAIL_MAX_FALLBACK_ATTEMPTS, 2))
-);
-
 const getMailCredentials = () => {
   const rawUser = process.env.SMTP_USER || process.env.GMAIL_USER || "";
   const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
@@ -60,9 +49,9 @@ const createTransporter = (config: MailTransportConfig) =>
       user: config.user,
       pass: config.pass,
     },
-    connectionTimeout: MAIL_TIMEOUT_MS,
-    greetingTimeout: MAIL_TIMEOUT_MS,
-    socketTimeout: MAIL_TIMEOUT_MS,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
     tls: {
       rejectUnauthorized: false,
     },
@@ -116,10 +105,7 @@ export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
     `,
   };
 
-  const transportConfigs = [config, ...buildFallbackConfigs(config)].slice(
-    0,
-    MAIL_MAX_FALLBACK_ATTEMPTS
-  );
+  const transportConfigs = [config, ...buildFallbackConfigs(config)];
   let lastError: unknown = null;
 
   for (let i = 0; i < transportConfigs.length; i += 1) {
