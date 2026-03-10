@@ -7,14 +7,17 @@ exports.sendResetOtpEmail = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const dns_1 = __importDefault(require("dns"));
 try {
+    // Render can prefer IPv6 routes that fail for some SMTP providers.
     dns_1.default.setDefaultResultOrder("ipv4first");
 }
 catch (_error) {
+    // Ignore for older runtimes.
 }
 const getMailCredentials = () => {
     const rawUser = process.env.SMTP_USER || process.env.GMAIL_USER || "";
     const rawPass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "";
     const user = rawUser.trim();
+    // Gmail app passwords are frequently copied with spaces.
     const pass = rawPass.replace(/\s+/g, "");
     return { user, pass };
 };
@@ -65,7 +68,7 @@ const buildFallbackConfigs = (config) => {
 };
 const getMailFrom = () => {
     const { user } = getMailCredentials();
-    return process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
+    return process.env.MAIL_FROM || (user ? `<${user}>` : "");
 };
 const sendResetOtpEmail = async (toEmail, otp) => {
     const config = getPrimaryTransportConfig();
@@ -113,3 +116,4 @@ const sendResetOtpEmail = async (toEmail, otp) => {
         throw lastError;
 };
 exports.sendResetOtpEmail = sendResetOtpEmail;
+//# sourceMappingURL=mailer.js.map

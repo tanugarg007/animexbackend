@@ -47,9 +47,11 @@ const UpdateProfile = async (req, res) => {
             data.name = name;
         if (email)
             data.email = email;
+        // ✅ If new avatar uploaded
         if (uploadedAvatar) {
             data.avatar = uploadedAvatar;
         }
+        // ✅ If remove avatar requested
         if (removeAvatar === "true") {
             data.avatar = null;
         }
@@ -77,3 +79,4 @@ const UpdateProfile = async (req, res) => {
     }
 };
 exports.UpdateProfile = UpdateProfile;
+//# sourceMappingURL=index.js.map

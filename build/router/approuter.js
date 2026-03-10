@@ -12,10 +12,11 @@ const Course_1 = require("../controler/Course");
 const Admin_1 = require("../controler/Admin");
 const Enquiry_1 = require("../controler/Enquiry");
 const Profile_1 = require("../controler/Profile");
-const Authentication_1 = require("../middleware/Authentication");
+const Authentication_1 = require("../middleware/Authentication"); // ⚡ authentication middleware
 const SiteSettings_1 = require("../controler/SiteSettings");
 const router = express_1.default.Router();
 exports.router = router;
+// Multer setup for uploads
 const uploadDir = path_1.default.resolve(process.cwd(), "uploads");
 if (!fs_1.default.existsSync(uploadDir)) {
     fs_1.default.mkdirSync(uploadDir, { recursive: true });
@@ -29,18 +30,23 @@ const storage = multer_1.default.diskStorage({
     },
 });
 const upload = (0, multer_1.default)({ storage });
+// Auth routes
 router.post("/login", upload.none(), Admin_1.LoginUser);
 router.post("/forgot-password", upload.none(), Admin_1.ForgotAdminPassword);
+// ✅ Profile routes (protected)
 router.get("/profile", Authentication_1.Authentication, Profile_1.GetProfile);
 router.patch("/profiles", Authentication_1.Authentication, upload.single("avatar"), Profile_1.UpdateProfile);
+// Course routes
 router.post("/course", Course_1.CreateCourse);
 router.get("/courses", Course_1.GetCourses);
 router.get("/courses/:id", Course_1.GetCourseById);
 router.patch("/courses/:id", Course_1.UpdateCourse);
 router.delete("/courses/:id", Course_1.DeleteCourse);
+// Enquiry routes
 router.post("/enquiry", Enquiry_1.Enquiry);
 router.get("/enquiries", Enquiry_1.GetEnquiries);
 router.patch("/enquiries/:id", Enquiry_1.UpdateEnquiry);
 router.delete("/enquiries/:id", Enquiry_1.DeleteEnquiry);
 router.get("/site-settings", SiteSettings_1.GetSiteSettings);
 router.patch("/site-settings", Authentication_1.Authentication, SiteSettings_1.UpdateSiteSettings);
+//# sourceMappingURL=approuter.js.map

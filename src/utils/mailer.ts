@@ -75,7 +75,7 @@ const buildFallbackConfigs = (config: MailTransportConfig): MailTransportConfig[
 
 const getMailFrom = () => {
   const { user } = getMailCredentials();
-  return process.env.MAIL_FROM || (user ? `Dream Animex <${user}>` : "");
+return process.env.MAIL_FROM || (user ? `<${user}>` : "");
 };
 
 export const sendResetOtpEmail = async (toEmail: string, otp: string) => {
