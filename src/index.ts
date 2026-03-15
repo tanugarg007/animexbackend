@@ -1,18 +1,26 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { router } from "./router/approuter.js";
-
+import { router } from "./router/approuter";
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "https://dreamanimex.com",
-    "https://www.dreamanimex.com"
-  ],
+  origin: (origin, callback) => {
+
+    if (!origin) return callback(null, true);
+
+    if (
+      origin.startsWith("http://localhost") ||
+      origin.startsWith("http://127.0.0.1")
+    ) {
+      return callback(null, true);
+    }
+
+    return callback(new Error("Not allowed by CORS"));
+  },
+
   credentials: true
 }));
 
