@@ -1,24 +1,19 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { router } from "./router/approuter";
+import { router } from "./router/approuter.js";
+
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
 
-    if (
-      origin.includes("vercel.app") ||
-      origin.includes("localhost")
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "https://dreamanimex.com",
+    "https://www.dreamanimex.com"
+  ],
+  credentials: true
 }));
 
 app.use(express.json());
