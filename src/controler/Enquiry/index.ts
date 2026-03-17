@@ -17,17 +17,28 @@ export const Enquiry = async (req: Request, res:Response):Promise<any> => {
        if(!name || !email || !phone || !city || !message || !course){
          return res.status(400).json({message:"all fields are required"})
        }
-       if (!NAME_REGEX.test(name.trim())) {
+       const normalizedName = name.trim();
+       const normalizedEmail = email.trim().toLowerCase();
+       const normalizedPhone = phone.trim();
+       const normalizedCity = city.trim();
+       const normalizedMessage = message.trim();
+       const normalizedCourse = course.trim();
+
+       if (!normalizedCity || !normalizedMessage || !normalizedCourse) {
+         return res.status(400).json({ message: "all fields are required" });
+       }
+
+       if (!NAME_REGEX.test(normalizedName)) {
          return res.status(400).json({ message: "Name can contain only letters and spaces" });
        }
        const enquiry = await prisma.enquiry.create({
          data:{
-            name: name.trim(),
-            email,
-            phone,
-            city,
-            message,
-            course
+            name: normalizedName,
+            email: normalizedEmail,
+            phone: normalizedPhone,
+            city: normalizedCity,
+            message: normalizedMessage,
+            course: normalizedCourse
          }
        })
        res.status(200).json({message:"success",enquiry})    
@@ -72,7 +83,18 @@ export const UpdateEnquiry = async (req: Request, res: Response): Promise<any> =
     if (!name || !email || !phone || !city || !message || !course) {
       return res.status(400).json({ message: "All fields are required" });
     }
-    if (!NAME_REGEX.test(name.trim())) {
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone.trim();
+    const normalizedCity = city.trim();
+    const normalizedMessage = message.trim();
+    const normalizedCourse = course.trim();
+
+    if (!normalizedCity || !normalizedMessage || !normalizedCourse) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (!NAME_REGEX.test(normalizedName)) {
       return res.status(400).json({ message: "Name can contain only letters and spaces" });
     }
 
@@ -89,12 +111,12 @@ export const UpdateEnquiry = async (req: Request, res: Response): Promise<any> =
     const enquiry = await prisma.enquiry.update({
       where: { id },
       data: {
-        name: name.trim(),
-        email,
-        phone,
-        city,
-        message,
-        course,
+        name: normalizedName,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        city: normalizedCity,
+        message: normalizedMessage,
+        course: normalizedCourse,
       },
     });
 
