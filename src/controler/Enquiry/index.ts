@@ -24,7 +24,7 @@ export const Enquiry = async (req: Request, res:Response):Promise<any> => {
        const normalizedMessage = message.trim();
        const normalizedCourse = course.trim();
 
-       if (!normalizedCity || !normalizedMessage || !normalizedCourse) {
+       if (!normalizedCity || !normalizedMessage || !normalizedCourse ) {
          return res.status(400).json({ message: "all fields are required" });
        }
 
