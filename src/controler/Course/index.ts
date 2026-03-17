@@ -4,7 +4,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export async function CreateCourse(req: Request, res: Response) {
   try {
-    const { title, duration } = req.body;
+    const { title, duration  } = req.body;
 
     if (!title?.trim()) {
       return res.status(400).json({ message: "Title is required" });
