@@ -11,12 +11,14 @@ app.use(cors({
 
     if (!origin) return callback(null, true);
 
-    if (
-      origin.startsWith("http://localhost") ||
-      origin.startsWith("http://127.0.0.1") ||
-      origin.startsWith("https://www.dreamanimex.com") ||
-      origin.startsWith("https://dreamanimex.com")
-    ) {
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "https://www.dreamanimex.com",
+      "https://dreamanimex.com"
+    ];
+
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 

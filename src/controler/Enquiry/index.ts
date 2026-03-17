@@ -6,14 +6,15 @@ interface Enquiry{
    name:string,
    email:string,
    phone: string,
+   city: string,
    message:string,
    course:string
 }
 export const Enquiry = async (req: Request, res:Response):Promise<any> => {
   console.log("Received enquiry data:", req.body);
    try{
-       const { name, email, phone, message, course } = (req.body ?? {}) as Partial<Enquiry>;
-       if(!name || !email || !phone || !message || !course){
+       const { name, email, phone, city, message, course } = (req.body ?? {}) as Partial<Enquiry>;
+       if(!name || !email || !phone || !city || !message || !course){
          return res.status(400).json({message:"all fields are required"})
        }
        if (!NAME_REGEX.test(name.trim())) {
@@ -24,6 +25,7 @@ export const Enquiry = async (req: Request, res:Response):Promise<any> => {
             name: name.trim(),
             email,
             phone,
+            city,
             message,
             course
          }
@@ -63,11 +65,11 @@ export const UpdateEnquiry = async (req: Request, res: Response): Promise<any> =
       return res.status(400).json({ message: "Invalid enquiry id" });
     }
 
-    const { name, email, phone, message, course } =
+    const { name, email, phone, city, message, course } =
       req.body as Partial<Enquiry>;
 
     // ✅ required fields check
-    if (!name || !email || !phone || !message || !course) {
+    if (!name || !email || !phone || !city || !message || !course) {
       return res.status(400).json({ message: "All fields are required" });
     }
     if (!NAME_REGEX.test(name.trim())) {
@@ -90,6 +92,7 @@ export const UpdateEnquiry = async (req: Request, res: Response): Promise<any> =
         name: name.trim(),
         email,
         phone,
+        city,
         message,
         course,
       },

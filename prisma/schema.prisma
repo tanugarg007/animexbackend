@@ -23,6 +23,7 @@ model enquiry {
   id        Int      @id @default(autoincrement())
   name      String
   email     String
+  city      String?
   message   String
   createdAt DateTime @default(now())
   status    String   @default("pending")
