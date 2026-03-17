@@ -36,7 +36,7 @@ export const Enquiry = async (req: Request, res:Response):Promise<any> => {
             name: normalizedName,
             email: normalizedEmail,
             phone: normalizedPhone,
-            city: normalizedCity,
+            city: normalizedCity || "N/A",
             message: normalizedMessage,
             course: normalizedCourse
          }
